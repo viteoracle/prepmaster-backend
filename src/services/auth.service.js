@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import chalk from 'chalk';
 import User from '../models/user.model.js';
 import config from '../config/config.js';
 import AppError from '../utils/appError.js';
@@ -16,6 +17,7 @@ class AuthService {
     }
 
     async register(userData, currentUser) {
+        console.log(chalk.blue(`📝 New registration attempt: ${userData.email}`));
         const { confirmPassword, ...userDataWithoutConfirm } = userData;
 
         const existingUser = await User.findOne({ email: userData.email });
@@ -48,6 +50,7 @@ class AuthService {
             otpExpires
         });
 
+        console.log(chalk.green(`✓ Successfully registered user: ${userData.email}`));
         return { user, otp };
     }
 
@@ -118,10 +121,15 @@ class AuthService {
     }
 
     async login(email, password) {
+        console.log(chalk.blue(`👤 Login attempt for user: ${email}`));
+        
         const user = await User.findOne({ email }).select('+password');
         if (!user || !(await user.comparePassword(password))) {
+            console.log(chalk.yellow(`❌ Failed login attempt for user: ${email}`));
             throw new AppError('Invalid email or password', 401);
         }
+
+        console.log(chalk.green(`✓ Successful login for user: ${email}`));
 
         if (!user.isEmailVerified) {
             throw new AppError('Please verify your email first', 401);

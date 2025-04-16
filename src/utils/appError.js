@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 class AppError extends Error {
     constructor(message, statusCode, errorCode = null) {
         super(message);
@@ -12,6 +14,15 @@ class AppError extends Error {
 
         // Classify error type
         this.errorType = this.classifyError(statusCode);
+
+        // Add colored logging
+        console.log(
+            chalk.red(`🚫 ${this.errorType}:`),
+            chalk.yellow(message),
+            '\n',
+            chalk.gray(`Status: ${statusCode}`),
+            chalk.gray(`Code: ${errorCode || 'N/A'}`)
+        );
 
         Error.captureStackTrace(this, this.constructor);
     }

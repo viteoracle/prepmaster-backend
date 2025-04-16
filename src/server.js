@@ -40,12 +40,28 @@ app.use(errorHandler);
 // Database Connection
 mongoose.connect(config.mongoUri)
     .then(() => {
-        console.log(chalk.green('✓ Connected to MongoDB'));
+        console.log(
+            chalk.green.bold('✓ Database Connection'),
+            chalk.green('Successfully connected to MongoDB')
+        );
+        
         app.listen(config.port, () => {
-            console.log(chalk.blue(`✓ Server is running on port ${config.port}`));
+            console.log(
+                chalk.blue.bold('✓ Server Status'),
+                chalk.blue(`Running on port ${chalk.bold(config.port)}`),
+                '\n',
+                chalk.cyan(`📚 API Docs: http://localhost:${config.port}/api-docs`),
+                '\n',
+                chalk.cyan(`🚀 Environment: ${config.env}`)
+            );
         });
     })
     .catch((err) => {
-        console.error(chalk.red('✗ MongoDB connection error:'), err);
+        console.error(
+            chalk.red.bold('✗ Database Error'),
+            chalk.red(err.message),
+            '\n',
+            chalk.yellow(err.stack)
+        );
         process.exit(1);
     });

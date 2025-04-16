@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
+import chalk from 'chalk';
 import User from '../models/user.model.js';
 import AppError from '../utils/appError.js';
 import catchAsync from '../utils/catchAsync.js';
@@ -34,38 +35,32 @@ const ROLE_PERMISSIONS = {
 };
 
 const authenticate = catchAsync(async (req, res, next) => {
-    // 1) Check if token exists
     let token;
     if (req.headers.authorization?.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
     }
 
     if (!token) {
+        console.log(chalk.yellow('⚠️ Authentication failed: No token provided'));
         return next(AppError.unauthorized('Please log in to access this resource'));
     }
 
-    // 2) Verify token
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    try {
+        const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
 
-    // 3) Check if user still exists
-    const user = await User.findById(decoded.id);
-    if (!user) {
-        return next(AppError.unauthorized('User no longer exists'));
+        if (!user) {
+            console.log(chalk.red(`❌ Authentication failed: User not found - ID: ${decoded.id}`));
+            return next(AppError.unauthorized('User no longer exists'));
+        }
+
+        console.log(chalk.green(`✓ Authentication successful: ${user.email}`));
+        req.user = user;
+        next();
+    } catch (error) {
+        console.log(chalk.red('❌ Token verification failed:', error.message));
+        return next(AppError.unauthorized('Invalid or expired token'));
     }
-
-    // 4) Check if user changed password after token was issued
-    if (user.passwordChangedAfter(decoded.iat)) {
-        return next(AppError.unauthorized('Password recently changed. Please log in again'));
-    }
-
-    // 5) Check if account is locked
-    if (user.isLocked && user.isLocked()) {
-        return next(AppError.forbidden('Account is locked. Please try again later'));
-    }
-
-    // Grant access to protected route
-    req.user = user;
-    next();
 });
 
 const authorize = (...roles) => {

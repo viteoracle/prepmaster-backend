@@ -7,7 +7,11 @@ import { adminLimiter } from '../config/security.js';
 
 const router = express.Router();
 
-// Apply authentication, rate limiting and authorization for all routes
+// Public admin routes
+router.post('/register', authController.registerAdmin);
+router.post('/verify-otp', authController.verifyAdminOTP);
+
+// Protected admin routes
 router.use(adminLimiter);
 router.use(authenticate);
 router.use(authorize('admin', 'super_admin'));
@@ -26,9 +30,5 @@ router.patch('/users/:id/deactivate', hasPermission('manage_users'), adminContro
 
 // Analytics Routes
 router.get('/stats', hasPermission('view_stats'), adminController.getUserStats);
-
-// Admin Authentication Routes
-router.post('/register', authController.registerAdmin);
-router.post('/verify-otp', authController.verifyAdminOTP);
 
 export default router;

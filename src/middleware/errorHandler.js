@@ -55,7 +55,25 @@ const sendErrorProd = (err, res) => {
 };
 
 const globalErrorHandler = (err, req, res, next) => {
-    console.error(chalk.red(err.stack));
+    // Log error with color coding based on severity
+    console.error(
+        chalk.red.bold('🚫 Error:'),
+        chalk.red(err.message),
+        '\n',
+        chalk.yellow('Stack:'),
+        chalk.gray(err.stack)
+    );
+
+    // Add request context to logs
+    console.log(
+        chalk.blue('Request Details:'),
+        '\n',
+        chalk.cyan(`Method: ${req.method}`),
+        '\n',
+        chalk.cyan(`Path: ${req.path}`),
+        '\n',
+        chalk.cyan(`Time: ${new Date().toISOString()}`)
+    );
 
     err.statusCode = err.statusCode || 500;
     err.status = err.status || 'error';
