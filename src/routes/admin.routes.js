@@ -74,27 +74,6 @@ router.get('/stats/questions',
     adminController.getQuestionStats
 );
 
-// Department Management Routes
-router.get('/departments',
-    hasPermission('manage_departments'),
-    adminController.getAllDepartments
-);
-
-router.post('/departments',
-    hasPermission('manage_departments'),
-    adminController.createDepartment
-);
-
-router.patch('/departments/:id',
-    hasPermission('manage_departments'),
-    adminController.updateDepartment
-);
-
-router.delete('/departments/:id',
-    hasPermission('manage_departments'),
-    adminController.deleteDepartment
-);
-
 // Admin Authentication Routes
 router.post('/register', authController.registerAdmin);
 router.post('/verify-otp', authController.verifyAdminOTP);

@@ -102,3 +102,35 @@ export const deactivateUser = catchAsync(async (req, res) => {
         data: { user }
     });
 });
+
+export const getAllDepartments = catchAsync(async (req, res) => {
+    const departments = await adminService.getAllDepartments();
+    res.status(200).json({
+        status: 'success',
+        data: { departments }
+    });
+});
+
+export const createDepartment = catchAsync(async (req, res) => {
+    const department = await adminService.createDepartment(req.body);
+    res.status(201).json({
+        status: 'success',
+        data: { department }
+    });
+});
+
+export const updateDepartment = catchAsync(async (req, res) => {
+    const department = await adminService.updateDepartment(req.params.id, req.body);
+    res.status(200).json({
+        status: 'success',
+        data: { department }
+    });
+});
+
+export const deleteDepartment = catchAsync(async (req, res) => {
+    await adminService.deleteDepartment(req.params.id);
+    res.status(204).json({
+        status: 'success',
+        data: null
+    });
+});
