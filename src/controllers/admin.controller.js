@@ -86,3 +86,19 @@ export const getUserStats = catchAsync(async (req, res) => {
         }
     });
 });
+
+export const activateUser = catchAsync(async (req, res) => {
+    const user = await adminService.updateUser(req.params.id, { isActive: true });
+    res.status(200).json({
+        status: 'success',
+        data: { user }
+    });
+});
+
+export const deactivateUser = catchAsync(async (req, res) => {
+    const user = await adminService.updateUser(req.params.id, { isActive: false });
+    res.status(200).json({
+        status: 'success',
+        data: { user }
+    });
+});

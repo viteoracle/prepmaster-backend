@@ -23,6 +23,11 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(compression());
 
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 // Mount routes directly
 app.use(ROUTES.AUTH, authRoutes);
 app.use(ROUTES.ADMIN, adminRoutes);
