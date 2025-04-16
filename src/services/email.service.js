@@ -1,5 +1,6 @@
-const nodemailer = require('nodemailer');
-const config = require('../config/config');
+import nodemailer from 'nodemailer';
+import config from '../config/config.js';
+import { verificationEmailTemplate, otpEmailTemplate } from '../templates/emailTemplates.js';
 
 class EmailService {
     constructor() {
@@ -15,17 +16,21 @@ class EmailService {
 
     async sendVerificationEmail(to, name, token) {
         const verificationUrl = `${config.baseUrl}/verify-email/${token}`;
-
+        
         await this.transporter.sendMail({
             to,
-            subject: 'Email Verification',
-            html: `
-        <h1>Hello ${name}</h1>
-        <p>Please verify your email by clicking the link below:</p>
-        <a href="${verificationUrl}">Verify Email</a>
-      `
+            subject: 'PrepMaster - Email Verification',
+            html: verificationEmailTemplate(name, verificationUrl)
+        });
+    }
+
+    async sendOTPEmail(to, name, otp) {
+        await this.transporter.sendMail({
+            to,
+            subject: 'PrepMaster - Email Verification Code',
+            html: otpEmailTemplate(name, otp)
         });
     }
 }
 
-module.exports = new EmailService();
+export default new EmailService();

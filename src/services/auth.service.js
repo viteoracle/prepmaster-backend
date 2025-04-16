@@ -1,8 +1,8 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const User = require('../models/user.model');
-const config = require('../config/config');
-const AppError = require('../utils/appError');
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import User from '../models/user.model.js';
+import config from '../config/config.js';
+import AppError from '../utils/appError.js';
 
 class AuthService {
     generateToken(userId) {
@@ -11,7 +11,13 @@ class AuthService {
         });
     }
 
+    generateOTP() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
     async register(userData, currentUser) {
+        const { confirmPassword, ...userDataWithoutConfirm } = userData;
+
         const existingUser = await User.findOne({ email: userData.email });
         if (existingUser) {
             throw new AppError('Email already registered', 400);
@@ -32,7 +38,83 @@ class AuthService {
             }
         }
 
-        return await User.create(userData);
+        const otp = this.generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        const user = await User.create({
+            ...userDataWithoutConfirm,
+            role: 'student',
+            otpCode: otp,
+            otpExpires
+        });
+
+        return { user, otp };
+    }
+
+    async registerAdmin(userData) {
+        const { email, password, name } = userData;
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            throw new AppError('Email already registered', 400);
+        }
+
+        const otp = this.generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        const user = await User.create({
+            email,
+            password,
+            name,
+            role: 'admin',
+            otpCode: otp,
+            otpExpires
+        });
+
+        user.password = undefined;
+        return { user, otp };
+    }
+
+    async verifyOTP(email, otp) {
+        const user = await User.findOne({
+            email,
+            otpCode: otp,
+            otpExpires: { $gt: Date.now() }
+        }).select('+otpCode +otpExpires');
+
+        if (!user) {
+            throw new AppError('Invalid or expired OTP', 400);
+        }
+
+        user.isEmailVerified = true;
+        user.otpCode = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        return user;
+    }
+
+    async verifyAdminOTP(email, otp) {
+        const user = await User.findOne({
+            email,
+            role: 'admin',
+            otpCode: otp,
+            otpExpires: { $gt: Date.now() }
+        }).select('+otpCode +otpExpires');
+
+        if (!user) {
+            throw new AppError('Invalid or expired OTP', 400);
+        }
+
+        user.isEmailVerified = true;
+        user.otpCode = undefined;
+        user.otpExpires = undefined;
+        await user.save();
+
+        const token = this.generateToken(user._id);
+        user.password = undefined;
+
+        return { user, token };
     }
 
     async login(email, password) {
@@ -63,4 +145,4 @@ class AuthService {
     }
 }
 
-module.exports = new AuthService();
+export default new AuthService();

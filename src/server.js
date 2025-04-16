@@ -1,14 +1,18 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const chalk = require('chalk');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
-const config = require('./config/config');
-const errorHandler = require('./middleware/errorHandler');
+import express from 'express';
+import mongoose from 'mongoose';
+import chalk from 'chalk';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
+import config from './config/config.js';
+import errorHandler from './middleware/errorHandler.js';
+import { ROUTES } from './config/routes.config.js';
+import authRoutes from './routes/auth.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
@@ -19,12 +23,11 @@ app.use(helmet());
 app.use(morgan('dev'));
 app.use(compression());
 
-// Swagger Documentation
+// Mount routes directly
+app.use(ROUTES.AUTH, authRoutes);
+app.use(ROUTES.ADMIN, adminRoutes);
+app.use(ROUTES.USERS, userRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api', require('./routes'));
 
 // Error Handler
 app.use(errorHandler);
